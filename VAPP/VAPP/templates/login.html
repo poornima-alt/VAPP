@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>VAPP | Login</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #07111f;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 400px;
+            max-width: 92%;
+            padding: 40px;
+            background: #0d1b2a;
+            border: 1px solid #1d4e89;
+            border-radius: 18px;
+            box-shadow: 0 0 35px rgba(0, 150, 255, 0.15);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #38bdf8;
+            font-size: 30px;
+        }
+
+        .logo p {
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+
+        label {
+            display: block;
+            margin-top: 18px;
+            margin-bottom: 7px;
+            color: #cbd5e1;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #081421;
+            color: white;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #38bdf8;
+        }
+
+        .password-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .password-wrapper input {
+            padding-right: 48px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: auto;
+            margin: 0;
+            padding: 4px;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toggle-password:hover {
+            background: transparent;
+            color: #38bdf8;
+        }
+
+        .toggle-password svg {
+            width: 21px;
+            height: 21px;
+        }
+
+        .login-button {
+            width: 100%;
+            margin-top: 25px;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            background: #0284c7;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .login-button:hover {
+            background: #0369a1;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            color: #f87171;
+            text-align: center;
+        }
+
+        .signup {
+            text-align: center;
+            margin-top: 20px;
+            color: #94a3b8;
+        }
+
+        a {
+            color: #38bdf8;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="logo">
+            <h1>VAPP</h1>
+            <p>AI-Powered Cyber Threat Intelligence</p>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="message">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('login') }}" autocomplete="on">
+
+            <label for="email">Email</label>
+            <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="Enter your email"
+                autocomplete="username"
+                required
+            >
+
+            <label for="password">Password</label>
+
+            <div class="password-wrapper">
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <button
+                    type="button"
+                    class="toggle-password"
+                    id="togglePassword"
+                    aria-label="Show password"
+                    aria-pressed="false"
+                    onclick="togglePasswordVisibility()"
+                >
+                    <svg id="eyeIcon"
+                         xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2"
+                         stroke-linecap="round"
+                         stroke-linejoin="round">
+
+                        <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </button>
+            </div>
+
+            <button type="submit" class="login-button">
+                Secure Login
+            </button>
+
+        </form>
+
+        <div class="signup">
+            Don't have an account?
+            <a href="/signup">Create Account</a>
+        </div>
+
+    </div>
+
+    <script>
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById("password");
+            const toggleButton = document.getElementById("togglePassword");
+            const eyeIcon = document.getElementById("eyeIcon");
+
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                toggleButton.setAttribute("aria-label", "Hide password");
+                toggleButton.setAttribute("aria-pressed", "true");
+
+                eyeIcon.innerHTML = `
+                    <path d="M3 3l18 18"/>
+                    <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/>
+                    <path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a15.7 15.7 0 0 1-3.1 3.9"/>
+                    <path d="M6.2 6.2C3.5 8.1 2 12 2 12s3.6 7 10 7a10.5 10.5 0 0 0 3-.4"/>
+                `;
+            } else {
+                passwordInput.type = "password";
+                toggleButton.setAttribute("aria-label", "Show password");
+                toggleButton.setAttribute("aria-pressed", "false");
+
+                eyeIcon.innerHTML = `
+                    <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                `;
+            }
+        }
+    </script>
+
+</body>
+</html>

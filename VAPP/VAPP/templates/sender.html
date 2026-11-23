@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>VAPP External Sender</title>
+<style>
+body{margin:0;min-height:100vh;background:#020711;color:#e8f7ff;font-family:"Segoe UI",Arial;display:flex;align-items:center;justify-content:center;padding:25px}
+.box{width:min(850px,100%);background:linear-gradient(145deg,#081b30,#030b15);border:1px solid rgba(56,189,248,.25);border-radius:18px;padding:25px;box-shadow:0 20px 60px #0008}
+h1{color:#38bdf8;margin:0 0 5px}p{color:#7890a8;font-size:12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{display:block;color:#7890a8;font-size:10px;margin-bottom:6px}input,textarea{width:100%;box-sizing:border-box;padding:12px;border-radius:9px;background:#04101e;color:white;border:1px solid #21415b;outline:none}textarea{min-height:130px}.full{grid-column:1/-1}button{margin-top:15px;width:100%;padding:13px;border:0;border-radius:9px;background:linear-gradient(135deg,#00bcd4,#087cff);color:white;font-weight:900;cursor:pointer}.result{display:none;margin-top:18px;padding:17px;border-radius:11px;background:#4b071022;border:1px solid #ef444466}.danger{color:#ff7070;font-weight:900;font-size:18px}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.card{padding:10px;background:#020b15;border-radius:8px}.card small{display:block;color:#668097}.card strong{display:block;margin-top:4px}.info{margin-top:8px;padding:10px;background:#020b15;border-radius:8px;font-size:11px;line-height:1.5}@media(max-width:650px){.grid,.cards{grid-template-columns:1fr}.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<div class="box">
+<h1>🛡️ VAPP External Security Gateway</h1>
+<p>Controlled external-device security event sender. Leave Source IP as AUTO to let VAPP record the connecting device address.</p>
+<div class="grid">
+<div><label>SENDER</label><input id="sender" value="unknown-sender@example.test"></div>
+<div><label>SOURCE IP</label><input id="source_ip" value="AUTO"></div>
+<div class="full"><label>SUBJECT</label><input id="subject" value="URGENT: Verify your account"></div>
+<div class="full"><label>MESSAGE</label><textarea id="body">Your account has been suspended. Click here to verify your account and reset your password.</textarea></div>
+</div>
+<button id="send" onclick="sendEvent()">📤 SEND MESSAGE TO VAPP</button>
+<div class="result" id="result">
+<div class="danger">🚨 VAPP THREAT DETECTED</div>
+<div class="cards">
+<div class="card"><small>THREAT</small><strong id="threat">—</strong></div>
+<div class="card"><small>RISK</small><strong id="risk">—</strong></div>
+<div class="card"><small>SCORE</small><strong id="score">—</strong></div>
+<div class="card"><small>CONFIDENCE</small><strong id="confidence">—</strong></div>
+<div class="card"><small>SOURCE</small><strong id="ip">—</strong></div>
+<div class="card"><small>EVENT ID</small><strong id="event">—</strong></div>
+</div>
+<div class="info"><b>Indicators:</b> <span id="indicators"></span></div>
+<div class="info"><b>VAPP Analysis:</b> <span id="explanation"></span></div>
+<div class="info"><b>Recommendation:</b> <span id="recommendation"></span></div>
+</div>
+</div>
+<script>
+async function sendEvent(){
+ const b=document.getElementById("send"); b.disabled=true;b.textContent="⏳ VAPP ANALYZING...";
+ try{
+  const r=await fetch("/api/incoming-email",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+   sender:document.getElementById("sender").value.trim(),
+   source_ip:document.getElementById("source_ip").value.trim(),
+   subject:document.getElementById("subject").value.trim(),
+   body:document.getElementById("body").value.trim()
+  })});
+  const d=await r.json(); if(!r.ok||!d.success)throw new Error(d.message||"Rejected");
+  document.getElementById("threat").textContent=d.threat_type;
+  document.getElementById("risk").textContent=d.risk_level;
+  document.getElementById("score").textContent=d.risk_score;
+  document.getElementById("confidence").textContent=d.confidence+"%";
+  document.getElementById("ip").textContent=d.source_ip;
+  document.getElementById("event").textContent="#"+d.event_id;
+  document.getElementById("indicators").textContent=d.matched_indicators.join(", ")||"none";
+  document.getElementById("explanation").textContent=d.explanation;
+  document.getElementById("recommendation").textContent=d.recommendation;
+  document.getElementById("result").style.display="block";
+ }catch(e){alert("VAPP ERROR: "+e.message)}finally{b.disabled=false;b.textContent="📤 SEND MESSAGE TO VAPP"}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>VAPP SOC</title>
+<style>
+body{margin:0;background:#020711;color:#e8f7ff;font-family:"Segoe UI",Arial;padding:25px}.wrap{max-width:1400px;margin:auto}h1{color:#38bdf8}.sub{color:#7890a8;font-size:12px}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}.card,.panel{background:#071425;border:1px solid #38bdf833;border-radius:13px;padding:16px}.card small{color:#7890a8}.card strong{display:block;font-size:25px;margin-top:7px;color:#38bdf8}table{width:100%;border-collapse:collapse;font-size:11px}th,td{padding:10px;border-bottom:1px solid #38bdf811;text-align:left}th{color:#7890a8}.HIGH,.CRITICAL{color:#ff7777}.MEDIUM{color:#fde68a}.LOW{color:#86efac}@media(max-width:800px){.cards{grid-template-columns:1fr 1fr}}
+</style>
+</head><body><div class="wrap">
+<h1>🛡️ VAPP SOC / ADMIN SECURITY CONSOLE</h1>
+<div class="sub">Platform-wide security events recorded in the VAPP database.</div>
+<div class="cards">
+<div class="card"><small>TOTAL EVENTS</small><strong>{{ stats.total }}</strong></div>
+<div class="card"><small>THREATS</small><strong>{{ stats.threats }}</strong></div>
+<div class="card"><small>HIGH / CRITICAL</small><strong>{{ stats.high }}</strong></div>
+<div class="card"><small>MEDIUM</small><strong>{{ stats.medium }}</strong></div>
+</div>
+<div class="panel"><h3>📡 Global Security Events</h3><table><thead><tr><th>ID</th><th>Time</th><th>User</th><th>Source</th><th>Event</th><th>Threat</th><th>Confidence</th><th>Score</th><th>Risk</th></tr></thead><tbody>
+{% for e in events %}<tr><td>#{{e.id}}</td><td>{{e.timestamp}}</td><td>{{e.user_email or "—"}}</td><td>{{e.source_ip}}</td><td>{{e.event_type}}</td><td>{{e.threat_type}}</td><td>{{e.confidence}}%</td><td>{{e.risk_score}}</td><td class="{{e.risk_level}}">{{e.risk_level}}</td></tr>{% else %}<tr><td colspan="9">No events recorded.</td></tr>{% endfor %}
+</tbody></table></div>
+</div></body></html>

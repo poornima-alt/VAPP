@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VAPP | QR Scanner</title>
+<style>
+body{font-family:Arial,sans-serif;background:#0b1220;color:#e8eefc;margin:0;padding:32px}
+main{max-width:760px;margin:30px auto;background:#151f32;padding:28px;border-radius:16px}
+h1{margin-top:0}p{color:#b8c5dc;line-height:1.6}
+input,button{padding:12px;margin:8px 0;max-width:100%;border-radius:8px}
+button{background:#4b83f5;color:white;border:0;cursor:pointer}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#0b1220;padding:16px;border-radius:8px}
+a{color:#8fb3ff}#status{margin-top:18px}
+</style>
+</head>
+<body>
+<main>
+<a href="/dashboard">? Back to Dashboard</a>
+<h1>?? VAPP QR Scanner</h1>
+<p>Upload an image containing a QR code to extract its text or URL.
+QR content is untrusted; extraction does not prove a link is safe.</p>
+<form id="qrForm">
+<input type="file" name="file" id="qrFile" accept="image/png,image/jpeg,image/webp" required>
+<br>
+<button type="submit">Scan QR Image</button>
+</form>
+<div id="status" role="status"></div>
+<pre id="result" hidden></pre>
+<script>
+document.getElementById("qrForm").addEventListener("submit", async function(event) {
+  event.preventDefault();
+  const file = document.getElementById("qrFile").files[0];
+  const status = document.getElementById("status");
+  const result = document.getElementById("result");
+  result.hidden = true;
+  result.textContent = "";
+  if (!file) { status.textContent = "Please select an image."; return; }
+  if (file.size > 2 * 1024 * 1024) {
+    status.textContent = "Image must be 2 MB or smaller.";
+    return;
+  }
+  const data = new FormData();
+  data.append("file", file);
+  status.textContent = "Scanning...";
+  try {
+    const response = await fetch("/api/qr-scan", {method:"POST", body:data});
+    const payload = await response.json();
+    status.textContent = payload.message || (response.ok ? "Scan complete." : "Scan failed.");
+    result.textContent = JSON.stringify(payload, null, 2);
+    result.hidden = false;
+  } catch (error) {
+    status.textContent = "Unable to contact VAPP. Please try again.";
+  }
+});
+</script>
+</main>
+</body>
+</html>

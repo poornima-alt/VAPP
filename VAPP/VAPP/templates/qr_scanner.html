@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VAPP | QR Threat Intelligence</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#0b1220;color:#e8eefc;margin:0;padding:20px}
+main{max-width:760px;margin:25px auto;background:#151f32;padding:25px;border-radius:16px}
+h1{margin-top:18px}
+p{color:#b8c5dc;line-height:1.6}
+a{color:#8fb3ff}
+input,button{padding:12px;margin:8px 0;max-width:100%;border-radius:8px}
+button{background:#4b83f5;color:white;border:0;cursor:pointer;font-weight:bold}
+.panel{background:#0b1220;padding:16px;border-radius:10px;margin-top:16px;overflow-wrap:anywhere}
+.hidden{display:none}
+.muted{color:#aab9d0}
+.score{font-size:30px;font-weight:bold}
+.low{color:#54d69a}.medium{color:#f4c45e}.high{color:#ff9b55}.critical{color:#ff647c}
+li{margin:9px 0;color:#d8e3f5}
+pre{white-space:pre-wrap;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<main>
+<a href="/dashboard">? Back to Dashboard</a>
+<h1>VAPP QR Threat Intelligence</h1>
+<p>Scan a QR image to extract its content, inspect URLs and analyze suspicious text patterns. QR analysis is advisory and does not guarantee safety.</p>
+<form id="qrForm">
+<input type="file" name="file" id="qrFile" accept="image/png,image/jpeg,image/webp" required>
+<br>
+<button type="submit">Scan & Analyze QR</button>
+</form>
+<div id="status" role="status" class="muted"></div>
+
+<section id="report" class="hidden">
+<div class="panel">
+<h3>Extracted QR Content</h3>
+<pre id="payload"></pre>
+</div>
+<div class="panel">
+<h3>Threat Assessment</h3>
+<div id="level" class="score"></div>
+<p id="score"></p>
+<p id="explanation"></p>
+<h4>Warning Indicators</h4>
+<ul id="indicators"></ul>
+<h4>Recommended Action</h4>
+<p id="recommendation"></p>
+<p id="scope" class="muted"></p>
+</div>
+<div class="panel">
+<h3>Extracted URLs</h3>
+<div id="urlLinks" class="muted">No URLs found in this QR code.</div>
+<h3>URL Intelligence</h3>
+<pre id="urls"></pre>
+</div>
+</section>
+</main>
+<script>
+const form=document.getElementById("qrForm");
+form.addEventListener("submit",async function(event){
+ event.preventDefault();
+ const file=document.getElementById("qrFile").files[0];
+ const status=document.getElementById("status");
+ const report=document.getElementById("report");
+ report.classList.add("hidden");
+ if(!file){status.textContent="Please select an image.";return;}
+ if(file.size>2*1024*1024){status.textContent="Image must be 2 MB or smaller.";return;}
+ const data=new FormData();
+ data.append("file",file);
+ status.textContent="Scanning and analyzing QR content...";
+ try{
+  const response=await fetch("/api/qr-scan",{method:"POST",body:data});
+  const result=await response.json();
+  if(!response.ok||!result.success){status.textContent=result.message||"Scan failed.";return;}
+  const a=result.threat_analysis;
+  if(!a){status.textContent="QR extracted, but threat analysis was not returned.";return;}
+  document.getElementById("payload").textContent=result.payload;
+  const level=document.getElementById("level");
+  level.textContent=a.risk_level+" RISK";
+  level.className="score "+String(a.risk_level).toLowerCase();
+  document.getElementById("score").textContent="Risk score: "+a.risk_score+"/100";
+  document.getElementById("explanation").textContent=a.explanation;
+  const list=document.getElementById("indicators");
+  list.replaceChildren();
+  a.indicators.forEach(item=>{
+   const li=document.createElement("li");
+   li.textContent=item;
+   list.appendChild(li);
+  });
+  document.getElementById("recommendation").textContent=a.recommendation;
+  document.getElementById("scope").textContent=a.analysis_scope;
+  const urlLinks=document.getElementById("urlLinks");
+  urlLinks.replaceChildren();
+  if(result.urls && result.urls.length){
+   result.urls.forEach(raw=>{
+    const row=document.createElement("p");
+    const link=document.createElement("a");
+    const candidate=/^https?:\/\//i.test(raw) ? raw :
+                    (/^www\./i.test(raw) ? "https://"+raw : null);
+    link.textContent=raw;
+    if(candidate){
+     try{
+      const parsed=new URL(candidate);
+      if(parsed.protocol==="http:" || parsed.protocol==="https:"){
+       link.href=parsed.href;
+       link.target="_blank";
+       link.rel="noopener noreferrer";
+       link.textContent=raw+" ?";
+      }
+     }catch(e){}
+    }
+    row.appendChild(link);
+    urlLinks.appendChild(row);
+   });
+  }else{
+   urlLinks.textContent="No URLs found in this QR code.";
+  }
+  document.getElementById("urls").textContent=JSON.stringify({
+   domains:result.domains,
+   url_intelligence:result.url_intelligence
+  },null,2);
+  report.classList.remove("hidden");
+  status.textContent="QR scan and threat analysis completed.";
+ }catch(error){status.textContent="Unable to contact VAPP. Please try again.";}
+});
+</script>
+</body>
+</html>
